@@ -91,6 +91,14 @@ final class GameMonitor {
     private(set) var live: LiveGameData?
     private(set) var liveReceivedAt = Date.distantPast
     private(set) var profiles: [String: ProfileLoad] = [:]
+    private(set) var runeImport: RuneImportStatus = .idle
+
+    enum RuneImportStatus: Equatable {
+        case idle
+        case importing(champion: String)
+        case imported(champion: String)
+        case failed(String)
+    }
 
     /// Called on every phase transition; the overlay uses it to show/hide itself.
     @ObservationIgnored var onPhaseChange: (@MainActor (GamePhase) -> Void)?
@@ -101,6 +109,8 @@ final class GameMonitor {
     @ObservationIgnored private var attemptedRiotIDs: Set<String> = []
     @ObservationIgnored private var connectAttempts = 0
     @ObservationIgnored private var phaseFailures = 0
+    /// The champion runes were last imported for in this champ select.
+    @ObservationIgnored private var runeImportChampion: Int?
     @ObservationIgnored private var lastSessionFetch = Date.distantPast
 
     // MARK: - Derived state
@@ -374,6 +384,8 @@ final class GameMonitor {
         if newPhase == .champSelect {
             champSelect = []
             enemyChampSelect = []
+            runeImportChampion = nil
+            runeImport = .idle
             if status != .demo {
                 queueId = nil
                 mapId = nil
@@ -423,6 +435,40 @@ final class GameMonitor {
             )
         }
         if enemies != enemyChampSelect { enemyChampSelect = enemies }
+
+        // Rune import: once you lock in. ARAM has no lock-in (champions are assigned, then
+        // rerolled or swapped), so there it follows your current champion.
+        let locked: Int?
+        if gameMode == .aram {
+            locked = slots.first(where: \.isLocalPlayer)?.championId
+        } else {
+            locked = (session.actions ?? []).joined().compactMap(\.value).first {
+                $0.actorCellId == session.localPlayerCellId && $0.type == "pick" && $0.completed == true
+            }?.championId.nonZero
+        }
+        if let locked, locked != runeImportChampion, AppSettings.shared.autoImportRunes {
+            runeImportChampion = locked
+            Task { await importRunes(for: locked) }
+        }
+    }
+
+    /// Puts the common rune page for a champion into League and selects it.
+    func importRunes(for champion: Int) async {
+        let mode = gameMode
+        guard mode.metaMode != nil, let name = DataDragon.shared.champion(champion)?.name else { return }
+        runeImport = .importing(champion: name)
+        let position = myPosition
+        await MetaStore.shared.ensureChampion(champion, position, mode)
+        guard let page = MetaStore.shared.champion(champion, position, mode)?.value?.runes, page.isComplete else {
+            runeImport = .failed("No rune data for \(name)")
+            return
+        }
+        do {
+            try await applyRunes(page, championName: name)
+            runeImport = .imported(champion: name)
+        } catch {
+            runeImport = .failed(error.localizedDescription)
+        }
     }
 
     private func refreshGame(_ client: LCUClient) async {

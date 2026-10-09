@@ -1,7 +1,7 @@
 import Foundation
 
-/// Writes one app-owned rune page ("Sightline: <champion>") and selects it. This is the only
-/// write Sightline makes to the client, and it only runs after the user confirms it.
+/// Writes one app-owned rune page ("Recall: <champion>") and selects it. This is the only
+/// write Recall makes to the client, and it only runs after the user confirms it.
 struct RunePageWriter {
     enum WriteError: LocalizedError {
         case incompletePage
@@ -15,7 +15,7 @@ struct RunePageWriter {
         }
     }
 
-    static let namePrefix = "Sightline: "
+    static let namePrefix = "Recall: "
     private static let pageIDKey = "runePageID"
 
     let client: LCUClient
@@ -25,8 +25,8 @@ struct RunePageWriter {
             throw WriteError.incompletePage
         }
 
-        // Replace only the page Sightline created last time (matched by id, not just by name), so
-        // a page the player happened to name "Sightline: …" is never touched.
+        // Replace only the page Recall created last time (matched by id, not just by name), so
+        // a page the player happened to name "Recall: …" is never touched.
         let pages = (try? await client.get("/lol-perks/v1/pages", as: [LCUPerkPage].self)) ?? []
         let ownID = UserDefaults.standard.object(forKey: Self.pageIDKey) as? Int
         if let ownID, let existing = pages.first(where: { $0.id == ownID && $0.name?.hasPrefix(Self.namePrefix) == true && $0.isDeletable != false }) {

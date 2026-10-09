@@ -107,7 +107,7 @@ actor OPGGClient {
 enum DiskCache {
     private static var directory: URL? {
         guard let base = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else { return nil }
-        let dir = base.appendingPathComponent("Sightline/opgg", isDirectory: true)
+        let dir = base.appendingPathComponent("Recall/opgg", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir
     }

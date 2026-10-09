@@ -91,6 +91,8 @@ final class AppSettings {
     var textScale: Double { didSet { defaults.set(textScale, forKey: "textScale") } }
     var onlyOverGame: Bool { didSet { defaults.set(onlyOverGame, forKey: "onlyOverGame") } }
     var autoSwitchToLive: Bool { didSet { defaults.set(autoSwitchToLive, forKey: "autoSwitchToLive") } }
+    /// Put the common rune page into League as soon as you lock in a champion.
+    var autoImportRunes: Bool { didSet { defaults.set(autoImportRunes, forKey: "autoImportRunes") } }
 
     private let defaults = UserDefaults.standard
 
@@ -118,6 +120,7 @@ final class AppSettings {
         textScale = d.object(forKey: "textScale") as? Double ?? 1.0
         onlyOverGame = d.object(forKey: "onlyOverGame") as? Bool ?? true
         autoSwitchToLive = d.object(forKey: "autoSwitchToLive") as? Bool ?? true
+        autoImportRunes = d.object(forKey: "autoImportRunes") as? Bool ?? true
     }
 
     static let defaultPanels: Set<OverlayPanelKind> = [.scout, .cooldowns, .farm, .gold, .build]

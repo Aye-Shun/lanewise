@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 /// Renders screens with demo data to PNG files without showing any window, for checking the
-/// UI without a running game: `Sightline --snapshot out.png --scene draft`.
+/// UI without a running game: `Recall --snapshot out.png --scene draft`.
 ///
 /// Scenes: overview, history, draft, players, players-inspector, plan, scoreboard, settings, overlays.
 /// Add `--appearance light` to render the light appearance.

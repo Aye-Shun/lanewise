@@ -2,12 +2,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "Sightline",
+    name: "Recall",
     platforms: [.macOS(.v14)],
     targets: [
         .executableTarget(
-            name: "Sightline",
-            path: "Sources/Sightline"
+            name: "Recall",
+            path: "Sources/Recall"
         )
     ]
 )

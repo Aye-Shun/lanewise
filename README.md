@@ -1,9 +1,10 @@
-# Sightline
+# Recall
 
 A lightweight, native macOS companion and in-game overlay for League of Legends.
 
-Sightline scouts both teams at the loading screen, times enemy summoner spells, tracks your CS per
-minute, gold lead and next item during the game, and shows your match history. It uses the League
+Recall imports your runes when you lock in, scouts both teams at the loading screen, times enemy
+summoner spells, tracks your CS per minute, gold lead and next item during the game, and shows your
+match history. It uses the League
 client already running on your Mac plus public build data. No account, no API key, no Overwolf.
 
 <p align="center">
@@ -35,6 +36,13 @@ Lanes tile hides it until the next game.
 These sections are made for Summoner's Rift. In ARAM, holding Tab shows Gold Diff and Next Item;
 Arena gets only the Lanes tile.
 
+### Rune import
+
+When you lock in a champion, Recall puts the common rune page for that champion and role into League
+and selects it, so it's ready before the game loads. In ARAM it follows rerolls and swaps. It only ever
+creates or replaces its own "Recall: *champion*" page, and you can turn it off in Settings or apply a
+page yourself from the Draft screen.
+
 ### Lanes tile
 
 At the loading screen, the **Lanes** tile shows each lane's two players side by side: rank, season
@@ -46,29 +54,29 @@ premade groups. In game it comes back while Tab is held.
 | | |
 |---|---|
 | ![Match History](docs/screenshots/match-history.png) | **Match History.** Your recent games with result, champion, queue, KDA, CS/min, spells, keystone and items. Filter by Ranked, Normal or ARAM, load older games, and select one to see both teams. |
-| ![Draft](docs/screenshots/draft.png) | **Draft** (champ select). Spells, skill order and the common build for your pick, a scouting table for your team, and enemy picks as they lock in. On Summoner's Rift you also get the common rune page with a confirmed *Apply to Client*, ban suggestions, and each enemy's likely role and spells. Ranked champ select hides your teammates' names, so they're looked up at the loading screen. |
+| ![Draft](docs/screenshots/draft.png) | **Draft** (champ select). The common rune page for your pick (imported automatically when you lock in, or with *Apply to Client*), spells, skill order, the common build, a scouting table for your team, and enemy picks as they lock in. On Summoner's Rift you also get ban suggestions and each enemy's likely role and spells. Ranked champ select hides your teammates' names, so they're looked up at the loading screen. |
 | ![Players](docs/screenshots/players.png) | **Players** (loading screen). Both teams as tables: rank, recent win rate and KDA, stats on their current champion, mastery, recent form and notes. Select a player for their Solo and Flex rank, last 10 games and champion pool. |
 | ![Game Plan](docs/screenshots/game-plan.png) | **Game Plan.** The HUD's content at a larger size, for a second screen. |
 | ![Scoreboard](docs/screenshots/scoreboard.png) | **Scoreboard.** Kills, item gold and every player's items, with each lane's gold difference. |
 | ![Settings](docs/screenshots/settings.png) | **Settings.** Turn HUD sections on or off, choose when they appear, opacity, timer format and text size. |
 
-Screenshots use Sightline's sample players with live build data from OP.GG.
+Screenshots use Recall's sample players with live build data from OP.GG.
 
 ## Getting started
 
 Requirements: macOS 14 or later and Xcode 15.3 or later (Swift 5.10+).
 
 ```bash
-git clone https://github.com/Aye-Shun/sightline.git
-cd sightline
+git clone https://github.com/Aye-Shun/recall.git
+cd recall
 ./scripts/build-app.sh
-open build/Sightline.app
+open build/Recall.app
 ```
 
-`build-app.sh` makes an optimized, ad-hoc signed `build/Sightline.app` that runs on the Mac that
+`build-app.sh` makes an optimized, ad-hoc signed `build/Recall.app` that runs on the Mac that
 built it. Move it to `/Applications` if you like.
 
-Open Sightline before you play; it lives in the menu bar (binoculars icon), so closing the window
+Open Recall before you play; it lives in the menu bar (binoculars icon), so closing the window
 doesn't stop it. Use **Preview** in the toolbar to try every screen and the overlay without a game.
 
 **Overlay tips**
@@ -95,9 +103,10 @@ doesn't stop it. Use **Preview** in the toolbar to try every screen and the over
 | [Data Dragon](https://developer.riotgames.com/docs/lol#data-dragon) | Champion, item, rune and summoner spell data and icons. |
 | [CommunityDragon](https://communitydragon.org) | Icons for rune stat shards, which Data Dragon doesn't include. |
 
-The only change Sightline makes to the client is creating (or replacing) its own
-"Sightline: *champion*" rune page, and only after you confirm it. It never sends your client
-credentials anywhere, and there are no accounts or analytics.
+The only change Recall makes to the client is creating (or replacing) its own
+"Recall: *champion*" rune page and selecting it: when you lock in, if rune import is on, or when you
+click *Apply to Client*. It never sends your client credentials anywhere, and there are no accounts
+or analytics.
 
 **Lightweight:** with League in /Applications, finding the client is just a file check; polling
 slows to every 3–4 seconds outside ready checks, champ select and games; the Tab-key check runs only
@@ -106,8 +115,8 @@ during games; overlay windows are released after each game; and build data is ca
 ## Development
 
 ```bash
-swift run Sightline --demo                                # launch straight into preview data
-swift run Sightline --snapshot /tmp/draft.png --scene draft --appearance light
+swift run Recall --demo                                # launch straight into preview data
+swift run Recall --snapshot /tmp/draft.png --scene draft --appearance light
 ```
 
 Snapshot scenes: `overview`, `history`, `draft`, `players`, `players-inspector`, `plan`,
@@ -116,7 +125,7 @@ Diagnostic scenes `window-sizing`, `tab-stress` and `timer-test` print checks fo
 the spell timers.
 
 ```
-Sources/Sightline/
+Sources/Recall/
   App/          entry point, menu bar, settings model, snapshot renderer
   LCU/          League client discovery, REST client, models, rune page writer
   LiveClient/   in-game Live Client Data API
@@ -136,10 +145,10 @@ Sources/Sightline/
 
 ## Disclaimer
 
-Sightline isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or
+Recall isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or
 anyone officially involved in producing or managing Riot Games properties. Riot Games, and all
 associated properties are trademarks or registered trademarks of Riot Games, Inc.
 
-Sightline is not affiliated with OP.GG or CommunityDragon. The League client's local API isn't
-officially supported by Riot for third-party apps, so use Sightline at your own risk and check Riot's
+Recall is not affiliated with OP.GG or CommunityDragon. The League client's local API isn't
+officially supported by Riot for third-party apps, so use Recall at your own risk and check Riot's
 current policies.

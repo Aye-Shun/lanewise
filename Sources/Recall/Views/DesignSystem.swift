@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-// Sightline's look is deliberately plain macOS: neutral system grays, the user's own accent
+// Recall's look is deliberately plain macOS: neutral system grays, the user's own accent
 // color, flat grouped sections with inset separators, sentence-case headers, SF Pro text and
 // SF Pro Rounded numerals. The main window follows light/dark; overlay panels are fixed dark HUDs.
 
@@ -129,7 +129,7 @@ extension EnvironmentValues {
 // MARK: - Typography
 
 extension Font {
-    /// SF Pro Rounded with tabular digits: Sightline's numeral style.
+    /// SF Pro Rounded with tabular digits: Recall's numeral style.
     static func numeral(_ size: CGFloat, _ weight: Font.Weight = .semibold) -> Font {
         .system(size: size, weight: weight, design: .rounded).monospacedDigit()
     }

@@ -15,7 +15,7 @@ struct OverviewView: View {
             } header: {
                 header
             } footer: {
-                Text("Sightline reads only the League client's local APIs. It never injects code or reads game memory.")
+                Text("Recall reads only the League client's local APIs. It never injects code or reads game memory.")
                     .foregroundStyle(Palette.secondaryLabel)
             }
 
@@ -122,7 +122,15 @@ struct GeneralSettings: View {
             Section {
                 Toggle("Show Draft when champ select starts", isOn: $settings.autoSwitchToLive)
             } footer: {
-                Text("Sightline keeps running in the menu bar after you close its window, so panels still appear in game.")
+                Text("Recall keeps running in the menu bar after you close its window, so panels still appear in game.")
+                    .foregroundStyle(Palette.secondaryLabel)
+            }
+            Section {
+                Toggle("Import runes when you lock in a champion", isOn: $settings.autoImportRunes)
+            } header: {
+                Text("Runes")
+            } footer: {
+                Text("Recall puts the common rune page for your champion and role into League and selects it. It creates or replaces only its own \"Recall: <champion>\" page; your other pages are never changed. In ARAM it follows rerolls and swaps.")
                     .foregroundStyle(Palette.secondaryLabel)
             }
             Section("Text size") {
@@ -276,7 +284,7 @@ struct PrivacySettings: View {
         ("desktopcomputer", "Player data", "Read from your League client on this Mac. Your client credentials never leave it."),
         ("globe", "Builds and opponents", "From OP.GG's public API. Only champion names, roles and the game mode are sent."),
         ("photo.on.rectangle", "Icons and game data", "From Riot's Data Dragon, plus a few rune icons from CommunityDragon."),
-        ("square.and.pencil", "Changes to your client", "Only a rune page you confirm. No accounts, no tracking."),
+        ("square.and.pencil", "Changes to your client", "Only Recall's own rune page, when you lock in (if rune import is on) or click Apply. No accounts, no tracking."),
     ]
 
     var body: some View {
@@ -302,7 +310,7 @@ struct ReleaseNotesView: View {
     private let releases: [(String, [String])] = [
         ("1.0", [
             "Match History: your recent games with builds and stats, filters, and full game details",
-            "Draft: rune page with keystone details and confirmed one-click apply",
+            "Draft: rune page with keystone details; imported automatically when you lock in, or applied with one click",
             "Draft: common build, spells, skill order, ban suggestions, enemy spells by likely role, duo synergy",
             "Players: rank, LP, season and recent win rates, champion stats, mastery, streak and smurf notes, premade detection",
             "In game: one HUD tile with live Spell Timers, CS per minute, Gold Diff and Next Item, plus Lanes at the loading screen",
@@ -313,7 +321,7 @@ struct ReleaseNotesView: View {
     var body: some View {
         Form {
             ForEach(releases, id: \.0) { version, notes in
-                Section("Sightline \(version)") {
+                Section("Recall \(version)") {
                     ForEach(notes, id: \.self) { Text($0) }
                 }
             }

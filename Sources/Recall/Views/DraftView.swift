@@ -23,9 +23,7 @@ struct DraftView: View {
             YourPickSection(champion: champion, position: position, load: load)
 
             if champion != nil, mode.metaMode != nil {
-                if mode == .summonersRift {
-                    RunesSection(champion: champion, load: load)
-                }
+                RunesSection(champion: champion, load: load)
                 SpellsAndSkillsSection(load: load)
                 CommonBuildSection(load: load, mode: mode)
             }
@@ -124,7 +122,9 @@ private struct RunesSection: View {
 
     private func footer(_ page: OPRunePage) -> some View {
         InsetRow {
-            Text("Based on champion and role. Not adjusted for the enemy team.")
+            Text(AppSettings.shared.autoImportRunes
+                 ? "Imported automatically when you lock in. Based on champion and role."
+                 : "Based on champion and role. Not adjusted for the enemy team.")
                 .font(.system(size: 11))
                 .foregroundStyle(Palette.secondaryLabel)
             Spacer()
@@ -136,7 +136,18 @@ private struct RunesSection: View {
                     .foregroundStyle(Palette.positive)
             case .failed(let message):
                 Text(message).font(.system(size: 11)).foregroundStyle(Palette.negative).lineLimit(2)
-            case .idle: EmptyView()
+            case .idle:
+                // Automatic import (on lock-in) reports here.
+                switch monitor.runeImport {
+                case .importing: ProgressView().controlSize(.small)
+                case .imported(let name):
+                    Label("Imported for \(name)", systemImage: "checkmark.circle.fill")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(Palette.positive)
+                case .failed(let message):
+                    Text(message).font(.system(size: 11)).foregroundStyle(Palette.negative).lineLimit(2)
+                case .idle: EmptyView()
+                }
             }
             Button("Apply to Client…") { confirming = true }
                 .buttonStyle(.borderedProminent)
@@ -148,7 +159,7 @@ private struct RunesSection: View {
             Button("Add and Select") { apply(page) }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Sightline creates a page named “Sightline: \(DataDragon.shared.champion(champion)?.name ?? "")” and selects it. Later uses replace only that page; your own pages are never changed.")
+            Text("Recall creates a page named “Recall: \(DataDragon.shared.champion(champion)?.name ?? "")” and selects it. Later uses replace only that page; your own pages are never changed.")
         }
     }
 

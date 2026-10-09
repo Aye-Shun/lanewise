@@ -9,16 +9,16 @@ enum Entry {
         if let index = args.firstIndex(of: "--snapshot"), index + 1 < args.count {
             SnapshotRunner.run(output: args[index + 1], arguments: args)
         } else {
-            SightlineApp.main()
+            RecallApp.main()
         }
     }
 }
 
-struct SightlineApp: App {
+struct RecallApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
-        Window("Sightline", id: "main") {
+        Window("Recall", id: "main") {
             RootView().withAppEnvironment()
         }
         .defaultSize(width: 1240, height: 820)
@@ -44,7 +44,7 @@ struct SightlineApp: App {
             SettingsView().withAppEnvironment()
         }
 
-        MenuBarExtra("Sightline", systemImage: "binoculars") {
+        MenuBarExtra("Recall", systemImage: "binoculars") {
             MenuBarContent().withAppEnvironment()
         }
     }
@@ -54,7 +54,7 @@ private struct ReleaseNotesCommand: View {
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
-        Button("Sightline Release Notes") { openWindow(id: "release-notes") }
+        Button("Recall Release Notes") { openWindow(id: "release-notes") }
     }
 }
 
@@ -107,7 +107,7 @@ struct MenuBarContent: View {
         Text(monitor.statusText)
         Text(monitor.phase.label)
         Divider()
-        Button("Open Sightline") {
+        Button("Open Recall") {
             openWindow(id: "main")
             NSApp.activate()
         }
@@ -126,7 +126,7 @@ struct MenuBarContent: View {
         SettingsLink { Text("Settings…") }
             .keyboardShortcut(",", modifiers: .command)
         Divider()
-        Button("Quit Sightline") { NSApp.terminate(nil) }
+        Button("Quit Recall") { NSApp.terminate(nil) }
             .keyboardShortcut("q")
     }
 }

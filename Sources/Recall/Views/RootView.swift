@@ -305,7 +305,7 @@ struct SidebarStatus: View {
 struct LeagueNotRunningView: View {
     var body: some View {
         ContentUnavailableView("League Isn't Running", systemImage: "bolt.horizontal.circle",
-                               description: Text("Open League of Legends and sign in. Sightline connects on its own, with no account or API key."))
+                               description: Text("Open League of Legends and sign in. Recall connects on its own, with no account or API key."))
     }
 }
 
