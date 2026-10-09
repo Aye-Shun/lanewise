@@ -197,6 +197,27 @@ enum DemoData {
         )
     }
 
+    /// The sample player with this Riot ID (case-insensitive), for Player Lookup in previews.
+    static func puuid(forRiotID riotID: String) -> String? {
+        specs.firstIndex { "\($0.name)#\($0.tag)".caseInsensitiveCompare(riotID) == .orderedSame }.map { "demo-\($0)" }
+    }
+
+    /// A post-game summary for the newest sample game.
+    @MainActor
+    static func postGameSummary() -> PostGameSummary? {
+        let games = history()
+        guard let game = games.first else { return nil }
+        let others = Array(games.dropFirst())
+        let recent = HistorySummary(others)
+        let minutes = others.reduce(0.0) { $0 + Double($1.durationSeconds) / 60 }
+        return PostGameSummary(
+            game: game, lpChange: game.me.win ? 21 : -17,
+            rankAfter: RankInfo(tier: "GOLD", division: "I", leaguePoints: 75, wins: 65, losses: 52), promotion: nil,
+            averageKDA: recent.kda, averageCSPerMinute: recent.csPerMinute,
+            averageDamagePerMinute: minutes > 0 ? Double(others.reduce(0) { $0 + $1.me.damage }) / minutes : nil
+        )
+    }
+
     // MARK: - Match history
 
     private static let mageItems = [3118, 3020, 4645, 3157, 3089, 3135, 3165, 6655]

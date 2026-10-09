@@ -91,14 +91,18 @@ final class GameMonitor {
     private(set) var live: LiveGameData?
     private(set) var liveReceivedAt = Date.distantPast
     private(set) var profiles: [String: ProfileLoad] = [:]
-    private(set) var runeImport: RuneImportStatus = .idle
+    private(set) var loadoutImport: LoadoutImportStatus = .idle
 
-    enum RuneImportStatus: Equatable {
+    enum LoadoutImportStatus: Equatable {
         case idle
         case importing(champion: String)
-        case imported(champion: String)
+        /// What was imported, e.g. ["runes", "item build", "spells"].
+        case imported(champion: String, parts: [String])
         case failed(String)
     }
+
+    /// The League client connection, for services that read or write through it.
+    var lcu: LCUClient? { client }
 
     /// Called on every phase transition; the overlay uses it to show/hide itself.
     @ObservationIgnored var onPhaseChange: (@MainActor (GamePhase) -> Void)?
@@ -109,8 +113,11 @@ final class GameMonitor {
     @ObservationIgnored private var attemptedRiotIDs: Set<String> = []
     @ObservationIgnored private var connectAttempts = 0
     @ObservationIgnored private var phaseFailures = 0
-    /// The champion runes were last imported for in this champ select.
-    @ObservationIgnored private var runeImportChampion: Int?
+    /// The champion the loadout was last imported for in this champ select.
+    @ObservationIgnored private var importedChampion: Int?
+    /// When the current unanswered ready check was first seen; nil once it's answered or gone.
+    @ObservationIgnored private var readyCheckPendingSince: Date?
+    @ObservationIgnored private var readyCheckAccepted = false
     @ObservationIgnored private var lastSessionFetch = Date.distantPast
 
     // MARK: - Derived state
@@ -263,6 +270,7 @@ final class GameMonitor {
         mapId = 11
         profiles = demo.profiles.mapValues { .loaded($0) }
         CooldownTracker.shared.resetIfNewGame(gameId)
+        PostGameTracker.shared.summary = DemoData.postGameSummary()
         switch stage {
         case .champSelect:
             lobby = nil
@@ -283,6 +291,7 @@ final class GameMonitor {
     }
 
     func exitDemo() {
+        PostGameTracker.shared.summary = nil
         me = nil
         lobby = nil
         live = nil
@@ -326,6 +335,8 @@ final class GameMonitor {
         setPhase(GamePhase(raw: raw))
 
         switch phase {
+        case .readyCheck:
+            await handleReadyCheck(client)
         case .champSelect:
             await refreshChampSelect(client)
         case .gameStart, .inProgress, .reconnect:
@@ -378,14 +389,29 @@ final class GameMonitor {
 
     private func setPhase(_ newPhase: GamePhase) {
         guard newPhase != phase else { return }
+        let oldPhase = phase
         // A new game: fetch its session right away instead of trusting last game's teams.
-        if newPhase.isInGame && !phase.isInGame { lastSessionFetch = .distantPast }
+        if newPhase.isInGame && !oldPhase.isInGame {
+            lastSessionFetch = .distantPast
+            if status == .connected { Task { await PostGameTracker.shared.gameStarted() } }
+        }
+        // The game ended normally (not a dropped connection): summarize it once stats are in.
+        if oldPhase.isInGame && [.preEndOfGame, .endOfGame, .waitingForStats].contains(newPhase), status == .connected {
+            PostGameTracker.shared.gameEnded(gameId: gameId, queueId: queueId)
+        }
+        if newPhase == .readyCheck {
+            readyCheckPendingSince = nil
+            readyCheckAccepted = false
+            if AppSettings.shared.notifyMatchFound && !GameWindow.isFrontmost {
+                Notifier.post(title: "Match found", body: AppSettings.shared.autoAccept ? "Recall is accepting it for you." : "Accept it in League.", sound: true)
+            }
+        }
         phase = newPhase
         if newPhase == .champSelect {
             champSelect = []
             enemyChampSelect = []
-            runeImportChampion = nil
-            runeImport = .idle
+            importedChampion = nil
+            loadoutImport = .idle
             if status != .demo {
                 queueId = nil
                 mapId = nil
@@ -438,37 +464,101 @@ final class GameMonitor {
 
         // Rune import: once you lock in. ARAM has no lock-in (champions are assigned, then
         // rerolled or swapped), so there it follows your current champion.
-        let locked: Int?
-        if gameMode == .aram {
-            locked = slots.first(where: \.isLocalPlayer)?.championId
-        } else {
-            locked = (session.actions ?? []).joined().compactMap(\.value).first {
-                $0.actorCellId == session.localPlayerCellId && $0.type == "pick" && $0.completed == true
-            }?.championId.nonZero
+        // After lock-in, follow your current champion rather than the one you locked: a pick-order
+        // trade changes it.
+        let current = slots.first(where: \.isLocalPlayer)?.championId
+        let lockedIn = gameMode == .aram || (session.actions ?? []).joined().compactMap(\.value).contains {
+            $0.actorCellId == session.localPlayerCellId && $0.type == "pick" && $0.completed == true
         }
-        if let locked, locked != runeImportChampion, AppSettings.shared.autoImportRunes {
-            runeImportChampion = locked
-            Task { await importRunes(for: locked) }
+        let locked = lockedIn ? current : nil
+        if let locked, locked != importedChampion, AppSettings.shared.importsLoadout {
+            importedChampion = locked
+            Task { await importLoadout(for: locked) }
         }
     }
 
-    /// Puts the common rune page for a champion into League and selects it.
-    func importRunes(for champion: Int) async {
+    /// Puts the common rune page, item build and summoner spells for a champion into League,
+    /// each only if its setting is on.
+    func importLoadout(for champion: Int) async {
+        let settings = AppSettings.shared
         let mode = gameMode
-        guard mode.metaMode != nil, let name = DataDragon.shared.champion(champion)?.name else { return }
-        runeImport = .importing(champion: name)
+        guard mode.metaMode != nil, let client, let info = DataDragon.shared.champion(champion) else { return }
+        loadoutImport = .importing(champion: info.name)
         let position = myPosition
         await MetaStore.shared.ensureChampion(champion, position, mode)
-        guard let page = MetaStore.shared.champion(champion, position, mode)?.value?.runes, page.isComplete else {
-            runeImport = .failed("No rune data for \(name)")
+        guard let meta = MetaStore.shared.champion(champion, position, mode)?.value else {
+            loadoutImport = .failed("No build data for \(info.name)")
             return
         }
-        do {
-            try await applyRunes(page, championName: name)
-            runeImport = .imported(champion: name)
-        } catch {
-            runeImport = .failed(error.localizedDescription)
+
+        var parts: [String] = []
+        var problems: [String] = []
+        // A newer champion (ARAM swap, trade) may take over while this runs; stop writing if so.
+        var superseded: Bool { importedChampion != champion }
+        if superseded { return }
+        if settings.autoImportRunes, let page = meta.runes, page.isComplete {
+            do {
+                try await RunePageWriter(client: client).apply(page, championName: info.name)
+                parts.append("runes")
+            } catch {
+                problems.append("Runes: \(error.localizedDescription)")
+            }
         }
+        if superseded { return }
+        if settings.importItemSets, let summonerId = me?.summonerId {
+            do {
+                try await ItemSetWriter(client: client).apply(meta, champion: info, position: position, mode: mode,
+                                                              summonerId: summonerId, accountId: me?.accountId)
+                parts.append("item build")
+            } catch {
+                problems.append("Items: \(error.localizedDescription)")
+            }
+        }
+        if superseded { return }
+        if settings.importSpells, let spells = meta.spells?.ids, spells.count == 2 {
+            do {
+                try await SpellWriter(client: client).apply(spells, flashOnF: settings.flashOnF)
+                parts.append("spells")
+            } catch {
+                problems.append("Spells: \(error.localizedDescription)")
+            }
+        }
+        guard !superseded else { return }
+        loadoutImport = problems.isEmpty ? .imported(champion: info.name, parts: parts) : .failed(problems.joined(separator: " · "))
+    }
+
+    /// The ready-check popup: optionally accept it for you after a short pause (so you can still
+    /// decline), never after you've answered it yourself.
+    private func handleReadyCheck(_ client: LCUClient) async {
+        guard AppSettings.shared.autoAccept else { return }
+        guard let check = await client.fetch("/lol-matchmaking/v1/ready-check", as: LCUReadyCheck.self),
+              check.state == "InProgress", check.playerResponse == "None" else {
+            // Answered (by you or by us) or over: the next check starts its own 2 s wait.
+            readyCheckPendingSince = nil
+            readyCheckAccepted = false
+            return
+        }
+        guard let since = readyCheckPendingSince else {
+            readyCheckPendingSince = Date()
+            return
+        }
+        guard !readyCheckAccepted, Date().timeIntervalSince(since) >= 2 else { return }
+        readyCheckAccepted = true
+        _ = try? await client.send("POST", "/lol-matchmaking/v1/ready-check/accept")
+    }
+
+    /// Resolves a Riot ID ("Name#TAG") to a PUUID through the client.
+    func lookupPUUID(gameName: String, tagLine: String) async -> String? {
+        guard let client else { return nil }
+        let name = LCUClient.queryEscape(gameName)
+        let tag = LCUClient.queryEscape(tagLine)
+        if let summoner = await client.fetch("/lol-summoner/v1/alias/lookup?gameName=\(name)&tagLine=\(tag)", as: LCUSummoner.self),
+           let puuid = summoner.puuid.nonEmpty {
+            return puuid
+        }
+        // Older clients look players up by "Name#TAG" instead.
+        let combined = LCUClient.queryEscape("\(gameName)#\(tagLine)")
+        return await client.fetch("/lol-summoner/v1/summoners?name=\(combined)", as: LCUSummoner.self)?.puuid.nonEmpty
     }
 
     private func refreshGame(_ client: LCUClient) async {

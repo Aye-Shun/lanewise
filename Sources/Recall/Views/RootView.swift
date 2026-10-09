@@ -2,7 +2,7 @@ import Observation
 import SwiftUI
 
 enum SidebarItem: String, CaseIterable, Identifiable {
-    case overview, history, draft, players, plan, scoreboard
+    case overview, history, lookup, draft, players, plan, scoreboard
 
     var id: String { rawValue }
 
@@ -10,6 +10,7 @@ enum SidebarItem: String, CaseIterable, Identifiable {
         switch self {
         case .overview: "Overview"
         case .history: "Match History"
+        case .lookup: "Player Lookup"
         case .draft: "Draft"
         case .players: "Players"
         case .plan: "Game Plan"
@@ -21,6 +22,7 @@ enum SidebarItem: String, CaseIterable, Identifiable {
         switch self {
         case .overview: "square.grid.2x2"
         case .history: "clock.arrow.circlepath"
+        case .lookup: "magnifyingglass"
         case .draft: "person.2.crop.square.stack"
         case .players: "person.2"
         case .plan: "list.bullet.clipboard"
@@ -32,10 +34,11 @@ enum SidebarItem: String, CaseIterable, Identifiable {
         switch self {
         case .overview: "1"
         case .history: "2"
-        case .draft: "3"
-        case .players: "4"
-        case .plan: "5"
-        case .scoreboard: "6"
+        case .lookup: "3"
+        case .draft: "4"
+        case .players: "5"
+        case .plan: "6"
+        case .scoreboard: "7"
         }
     }
 }
@@ -56,6 +59,7 @@ struct RootView: View {
     @Environment(OverlayManager.self) private var overlay
     @Environment(Navigation.self) private var navigation
     @Environment(MatchHistoryStore.self) private var history
+    @Environment(PlayerLookupStore.self) private var lookup
 
     var body: some View {
         @Bindable var navigation = navigation
@@ -63,6 +67,7 @@ struct RootView: View {
             List(selection: Binding(get: { navigation.selection }, set: { if let item = $0 { navigation.selection = item } })) {
                 sidebarRow(.overview)
                 sidebarRow(.history)
+                sidebarRow(.lookup)
                 Section("Match") {
                     sidebarRow(.draft)
                     sidebarRow(.players)
@@ -108,7 +113,7 @@ struct RootView: View {
 
     private func isNow(_ item: SidebarItem) -> Bool {
         switch item {
-        case .overview, .history: false
+        case .overview, .history, .lookup: false
         case .draft: monitor.phase == .champSelect
         case .players: monitor.phase.isInGame && monitor.live == nil
         case .plan: monitor.phase.isInGame && monitor.live != nil
@@ -126,6 +131,8 @@ struct RootView: View {
             return ""
         case .history:
             return monitor.status == .demo ? "Sample player" : monitor.me?.riotID ?? ""
+        case .lookup:
+            return lookup.foundProfile?.riotID ?? ""
         case .draft:
             guard monitor.screen == .champSelect else { return "" }
             return [champion, monitor.myPosition?.label, monitor.queueName].compactMap { $0 }.joined(separator: " · ")
@@ -153,6 +160,8 @@ struct RootView: View {
             } else {
                 MatchHistoryView()
             }
+        case .lookup:
+            PlayerLookupView()
         case .draft:
             if monitor.screen == .champSelect {
                 DraftView()
@@ -209,10 +218,14 @@ struct RootView: View {
         case .players where monitor.lobby != nil:
             PlayerInspector(slot: selectedSlot)
         case .history where !history.games.isEmpty:
-            MatchDetailInspector(gameId: navigation.selectedGame ?? history.games.first?.gameId)
+            MatchDetailInspector(gameId: selectedGame(in: history))
+        case .lookup where !(lookup.history?.games.isEmpty ?? true):
+            if let store = lookup.history {
+                MatchDetailInspector(gameId: selectedGame(in: store)).environment(store)
+            }
         default:
             ContentUnavailableView("No Details", systemImage: "sidebar.trailing",
-                                   description: Text("Match History, Draft and Players show details here."))
+                                   description: Text("Match History, Player Lookup, Draft and Players show details here."))
         }
     }
 
@@ -220,6 +233,13 @@ struct RootView: View {
         (navigation.selection == .draft && monitor.screen == .champSelect)
             || (navigation.selection == .players && monitor.lobby != nil)
             || (navigation.selection == .history && !history.games.isEmpty)
+            || (navigation.selection == .lookup && !(lookup.history?.games.isEmpty ?? true))
+    }
+
+    /// The selected game if it belongs to this history, otherwise its newest game.
+    private func selectedGame(in store: MatchHistoryStore) -> Int? {
+        if let id = navigation.selectedGame, store.games.contains(where: { $0.gameId == id }) { return id }
+        return store.games.first?.gameId
     }
 
     private var selectedSlot: PlayerSlot? {

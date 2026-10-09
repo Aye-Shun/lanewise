@@ -122,7 +122,7 @@ private struct RunesSection: View {
 
     private func footer(_ page: OPRunePage) -> some View {
         InsetRow {
-            Text(AppSettings.shared.autoImportRunes
+            Text(AppSettings.shared.importsLoadout
                  ? "Imported automatically when you lock in. Based on champion and role."
                  : "Based on champion and role. Not adjusted for the enemy team.")
                 .font(.system(size: 11))
@@ -138,12 +138,13 @@ private struct RunesSection: View {
                 Text(message).font(.system(size: 11)).foregroundStyle(Palette.negative).lineLimit(2)
             case .idle:
                 // Automatic import (on lock-in) reports here.
-                switch monitor.runeImport {
+                switch monitor.loadoutImport {
                 case .importing: ProgressView().controlSize(.small)
-                case .imported(let name):
-                    Label("Imported for \(name)", systemImage: "checkmark.circle.fill")
+                case .imported(let name, let parts):
+                    Label("Imported \(ListFormatter.localizedString(byJoining: parts)) for \(name)", systemImage: "checkmark.circle.fill")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(Palette.positive)
+                        .lineLimit(1)
                 case .failed(let message):
                     Text(message).font(.system(size: 11)).foregroundStyle(Palette.negative).lineLimit(2)
                 case .idle: EmptyView()

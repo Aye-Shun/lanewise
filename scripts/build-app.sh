@@ -1,14 +1,21 @@
 #!/usr/bin/env bash
-# Builds an optimized Recall.app into ./build (ad-hoc signed, runs on this Mac).
+# Builds an optimized Recall.app into ./build (ad-hoc signed).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-swift build -c release
+# UNIVERSAL=1 builds for Apple silicon and Intel (needs Xcode); otherwise this Mac's architecture.
+if [[ "${UNIVERSAL:-0}" == "1" ]]; then
+    FLAGS=(-c release --arch arm64 --arch x86_64)
+else
+    FLAGS=(-c release)
+fi
+swift build "${FLAGS[@]}"
+BINARY="$(swift build "${FLAGS[@]}" --show-bin-path)/Recall"
 
 APP="build/Recall.app"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
-cp .build/release/Recall "$APP/Contents/MacOS/Recall"
+cp "$BINARY" "$APP/Contents/MacOS/Recall"
 strip -x "$APP/Contents/MacOS/Recall"
 
 cat > "$APP/Contents/Info.plist" <<'PLIST'

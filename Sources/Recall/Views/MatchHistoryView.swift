@@ -6,10 +6,18 @@ struct MatchHistoryView: View {
     @Environment(MatchHistoryStore.self) private var store
     @Environment(Navigation.self) private var navigation
     @State private var filter: HistoryFilter = .all
+    /// Shown above the summary (Player Lookup puts the player's profile here).
+    var topContent: AnyView?
+    /// The "Last game" card belongs to your own history only.
+    var showsPostGame = true
 
     var body: some View {
         let games = store.games.filter { filter.matches($0) }
         DetailPage(maxWidth: nil) {
+            if let topContent { topContent }
+            if showsPostGame, let summary = PostGameTracker.shared.summary {
+                PostGameCard(summary: summary)
+            }
             summary(games)
 
             InsetSection("Games", accessory: {

@@ -4,7 +4,8 @@ import SwiftUI
 /// Renders screens with demo data to PNG files without showing any window, for checking the
 /// UI without a running game: `Recall --snapshot out.png --scene draft`.
 ///
-/// Scenes: overview, history, draft, players, players-inspector, plan, scoreboard, settings, overlays.
+/// Scenes: overview, history, lookup, draft, players, players-inspector, plan, scoreboard, settings,
+/// settings-general, overlays.
 /// Add `--appearance light` to render the light appearance.
 @MainActor
 enum SnapshotRunner {
@@ -156,6 +157,22 @@ enum SnapshotRunner {
             let navigation = Navigation.shared
             switch scene {
             case "overview": navigation.selection = .overview
+            case "lookup":
+                navigation.selection = .lookup
+                await PlayerLookupStore.shared.search("Windwall#YAS")
+                if let store = PlayerLookupStore.shared.history {
+                    let urls = store.games.flatMap { $0.me.items }.compactMap { DataDragon.shared.itemIcon($0) }
+                        + store.games.compactMap { DataDragon.shared.championIcon($0.me.championId) }
+                        + [DataDragon.shared.profileIcon(PlayerLookupStore.shared.foundProfile?.summoner?.profileIconId)].compactMap { $0 }
+                    await withTaskGroup(of: Void.self) { group in
+                        for url in Set(urls) { group.addTask { _ = await ImageCache.shared.image(for: url) } }
+                    }
+                    if let first = store.games.first {
+                        navigation.selectedGame = first.gameId
+                        await store.loadDetail(first.gameId)
+                    }
+                }
+                size.height = 1000
             case "history":
                 navigation.selection = .history
                 await MatchHistoryStore.shared.reload()
@@ -189,6 +206,9 @@ enum SnapshotRunner {
             case "settings":
                 view = AnyView(OverlaySettings().frame(width: 520))
                 size = CGSize(width: 520, height: 1180)
+            case "settings-general":
+                view = AnyView(GeneralSettings().frame(width: 520))
+                size = CGSize(width: 520, height: 1050)
             case "overlays":
                 view = AnyView(OverlayGallery())
                 size = CGSize(width: 700, height: 640)

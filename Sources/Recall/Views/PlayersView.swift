@@ -345,9 +345,15 @@ struct PlayerInspector: View {
                         }
                     }
                     if let name = insight.profile.riotID {
-                        Button("Copy Riot ID") {
-                            NSPasteboard.general.clearContents()
-                            NSPasteboard.general.setString(name, forType: .string)
+                        HStack {
+                            Button("Match History") {
+                                Navigation.shared.selection = .lookup
+                                Task { await PlayerLookupStore.shared.search(name) }
+                            }
+                            Button("Copy Riot ID") {
+                                NSPasteboard.general.clearContents()
+                                NSPasteboard.general.setString(name, forType: .string)
+                            }
                         }
                         .buttonStyle(.bordered)
                     }

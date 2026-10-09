@@ -115,24 +115,82 @@ struct SettingsView: View {
 
 struct GeneralSettings: View {
     @Environment(AppSettings.self) private var settings
+    @State private var opensAtLogin = LoginItem.isEnabled
+    @State private var loginError: String?
 
     var body: some View {
         @Bindable var settings = settings
         Form {
             Section {
+                Toggle("Open Recall when you log in", isOn: Binding(
+                    get: { opensAtLogin },
+                    set: { on in
+                        do {
+                            try LoginItem.setEnabled(on)
+                            loginError = nil
+                        } catch {
+                            loginError = error.localizedDescription
+                        }
+                        opensAtLogin = LoginItem.isEnabled
+                    }
+                ))
+                .disabled(!LoginItem.isAvailable)
                 Toggle("Show Draft when champ select starts", isOn: $settings.autoSwitchToLive)
-            } footer: {
-                Text("Recall keeps running in the menu bar after you close its window, so panels still appear in game.")
-                    .foregroundStyle(Palette.secondaryLabel)
-            }
-            Section {
-                Toggle("Import runes when you lock in a champion", isOn: $settings.autoImportRunes)
             } header: {
-                Text("Runes")
+                Text("Startup")
             } footer: {
-                Text("Recall puts the common rune page for your champion and role into League and selects it. It creates or replaces only its own \"Recall: <champion>\" page; your other pages are never changed. In ARAM it follows rerolls and swaps.")
+                Text(loginFooter).foregroundStyle(Palette.secondaryLabel)
+            }
+
+            Section {
+                Toggle("Import runes", isOn: $settings.autoImportRunes)
+                Toggle("Import the item build into the shop", isOn: $settings.importItemSets)
+                Toggle("Set summoner spells", isOn: $settings.importSpells)
+                if settings.importSpells {
+                    Picker("Keep Flash on", selection: $settings.flashOnF) {
+                        Text("D").tag(false)
+                        Text("F").tag(true)
+                    }
+                    .pickerStyle(.segmented)
+                }
+            } header: {
+                Text("When you lock in a champion")
+            } footer: {
+                Text("Recall uses the common setup for your champion and role. It only creates or replaces its own \"Recall: <champion>\" rune page and item set; your other pages and sets are never changed. In ARAM it follows rerolls and swaps.")
                     .foregroundStyle(Palette.secondaryLabel)
             }
+
+            Section {
+                Toggle("Accept matches automatically", isOn: $settings.autoAccept)
+                Toggle("Notify me when a match is found", isOn: Binding(
+                    get: { settings.notifyMatchFound },
+                    set: { on in
+                        settings.notifyMatchFound = on
+                        if on { Notifier.requestAuthorization() }
+                    }
+                ))
+            } header: {
+                Text("Queue")
+            } footer: {
+                Text("Recall waits 2 seconds before accepting, so you can still decline, and never accepts after you've answered. Notifications only appear when League isn't the app in front.")
+                    .foregroundStyle(Palette.secondaryLabel)
+            }
+
+            Section {
+                Toggle("Notify me with a summary after each game", isOn: Binding(
+                    get: { settings.notifyPostGame },
+                    set: { on in
+                        settings.notifyPostGame = on
+                        if on { Notifier.requestAuthorization() }
+                    }
+                ))
+            } header: {
+                Text("After a game")
+            } footer: {
+                Text("Your LP change, and how your KDA, CS and damage compared to your recent average. The same summary appears at the top of Match History.")
+                    .foregroundStyle(Palette.secondaryLabel)
+            }
+
             Section("Text size") {
                 HStack {
                     Slider(value: $settings.textScale, in: 0.8...1.5, step: 0.1)
@@ -141,6 +199,14 @@ struct GeneralSettings: View {
             }
         }
         .formStyle(.grouped)
+        .onAppear { opensAtLogin = LoginItem.isEnabled }
+    }
+
+    private var loginFooter: String {
+        if let loginError { return "Couldn't change the login item: \(loginError)" }
+        if !LoginItem.isAvailable { return "Available when Recall runs as an app (scripts/build-app.sh)." }
+        if LoginItem.needsApproval { return "Allow Recall in System Settings → General → Login Items." }
+        return "Recall starts quietly in the menu bar, so the overlay is ready when you play. Closing its window keeps it running."
     }
 }
 

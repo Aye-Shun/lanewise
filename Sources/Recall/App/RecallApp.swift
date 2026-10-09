@@ -67,6 +67,7 @@ extension View {
             .environment(MetaStore.shared)
             .environment(Navigation.shared)
             .environment(MatchHistoryStore.shared)
+            .environment(PlayerLookupStore.shared)
     }
 }
 
@@ -82,6 +83,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let monitor = GameMonitor.shared
         monitor.onPhaseChange = { phase in OverlayManager.shared.handlePhase(phase) }
         HotKeys.registerDefaults()
+        LoginItem.enableByDefaultOnce()
+        if AppSettings.shared.notifyMatchFound || AppSettings.shared.notifyPostGame {
+            Notifier.requestAuthorization()
+        }
         if CommandLine.arguments.contains("--demo") {
             Task { @MainActor in
                 await DataDragon.shared.load()

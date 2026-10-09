@@ -93,6 +93,17 @@ final class AppSettings {
     var autoSwitchToLive: Bool { didSet { defaults.set(autoSwitchToLive, forKey: "autoSwitchToLive") } }
     /// Put the common rune page into League as soon as you lock in a champion.
     var autoImportRunes: Bool { didSet { defaults.set(autoImportRunes, forKey: "autoImportRunes") } }
+    /// Write the common build into the in-game shop when you lock in.
+    var importItemSets: Bool { didSet { defaults.set(importItemSets, forKey: "importItemSets") } }
+    /// Set the common summoner spells when you lock in.
+    var importSpells: Bool { didSet { defaults.set(importSpells, forKey: "importSpells") } }
+    var flashOnF: Bool { didSet { defaults.set(flashOnF, forKey: "flashOnF") } }
+    /// Accept the ready check for you (off by default: accepting while away earns a dodge).
+    var autoAccept: Bool { didSet { defaults.set(autoAccept, forKey: "autoAccept") } }
+    var notifyMatchFound: Bool { didSet { defaults.set(notifyMatchFound, forKey: "notifyMatchFound") } }
+    var notifyPostGame: Bool { didSet { defaults.set(notifyPostGame, forKey: "notifyPostGame") } }
+
+    var importsLoadout: Bool { autoImportRunes || importItemSets || importSpells }
 
     private let defaults = UserDefaults.standard
 
@@ -121,6 +132,12 @@ final class AppSettings {
         onlyOverGame = d.object(forKey: "onlyOverGame") as? Bool ?? true
         autoSwitchToLive = d.object(forKey: "autoSwitchToLive") as? Bool ?? true
         autoImportRunes = d.object(forKey: "autoImportRunes") as? Bool ?? true
+        importItemSets = d.object(forKey: "importItemSets") as? Bool ?? true
+        importSpells = d.object(forKey: "importSpells") as? Bool ?? true
+        flashOnF = d.bool(forKey: "flashOnF")
+        autoAccept = d.bool(forKey: "autoAccept")
+        notifyMatchFound = d.object(forKey: "notifyMatchFound") as? Bool ?? true
+        notifyPostGame = d.object(forKey: "notifyPostGame") as? Bool ?? true
     }
 
     static let defaultPanels: Set<OverlayPanelKind> = [.scout, .cooldowns, .farm, .gold, .build]

@@ -17,6 +17,7 @@ struct Lossy<T: Decodable>: Decodable {
 struct LCUSummoner: Decodable, Hashable {
     var puuid: String?
     var summonerId: Int?
+    var accountId: Int?
     var gameName: String?
     var tagLine: String?
     var displayName: String?
@@ -213,4 +214,13 @@ struct LCUPerkPage: Decodable {
 struct LCUPerkInventory: Decodable {
     var canAddCustomPage: Bool?
     var ownedPageCount: Int?
+}
+
+// MARK: - Ready check
+
+struct LCUReadyCheck: Decodable {
+    /// "InProgress" while the accept/decline popup is up.
+    var state: String?
+    /// "None", "Accepted" or "Declined".
+    var playerResponse: String?
 }
