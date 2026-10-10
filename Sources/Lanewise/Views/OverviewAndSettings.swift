@@ -15,7 +15,7 @@ struct OverviewView: View {
             } header: {
                 header
             } footer: {
-                Text("Recall reads only the League client's local APIs. It never injects code or reads game memory.")
+                Text("Lanewise reads only the League client's local APIs. It never injects code or reads game memory.")
                     .foregroundStyle(Palette.secondaryLabel)
             }
 
@@ -122,7 +122,7 @@ struct GeneralSettings: View {
         @Bindable var settings = settings
         Form {
             Section {
-                Toggle("Open Recall when you log in", isOn: Binding(
+                Toggle("Open Lanewise when you log in", isOn: Binding(
                     get: { opensAtLogin },
                     set: { on in
                         do {
@@ -156,7 +156,7 @@ struct GeneralSettings: View {
             } header: {
                 Text("When you lock in a champion")
             } footer: {
-                Text("Recall uses the common setup for your champion and role. It only creates or replaces its own \"Recall: <champion>\" rune page and item set; your other pages and sets are never changed. In ARAM it follows rerolls and swaps.")
+                Text("Lanewise uses the common setup for your champion and role. It only creates or replaces its own \"Lanewise: <champion>\" rune page and item set; your other pages and sets are never changed. In ARAM it follows rerolls and swaps.")
                     .foregroundStyle(Palette.secondaryLabel)
             }
 
@@ -172,7 +172,7 @@ struct GeneralSettings: View {
             } header: {
                 Text("Queue")
             } footer: {
-                Text("Recall waits 2 seconds before accepting, so you can still decline, and never accepts after you've answered. Notifications only appear when League isn't the app in front.")
+                Text("Lanewise waits 2 seconds before accepting, so you can still decline, and never accepts after you've answered. Notifications only appear when League isn't the app in front.")
                     .foregroundStyle(Palette.secondaryLabel)
             }
 
@@ -204,9 +204,9 @@ struct GeneralSettings: View {
 
     private var loginFooter: String {
         if let loginError { return "Couldn't change the login item: \(loginError)" }
-        if !LoginItem.isAvailable { return "Available when Recall runs as an app (scripts/build-app.sh)." }
-        if LoginItem.needsApproval { return "Allow Recall in System Settings → General → Login Items." }
-        return "Recall starts quietly in the menu bar, so the overlay is ready when you play. Closing its window keeps it running."
+        if !LoginItem.isAvailable { return "Available when Lanewise runs as an app (scripts/build-app.sh)." }
+        if LoginItem.needsApproval { return "Allow Lanewise in System Settings → General → Login Items." }
+        return "Lanewise starts quietly in the menu bar, so the overlay is ready when you play. Closing its window keeps it running."
     }
 }
 
@@ -350,7 +350,7 @@ struct PrivacySettings: View {
         ("desktopcomputer", "Player data", "Read from your League client on this Mac. Your client credentials never leave it."),
         ("globe", "Builds and opponents", "From OP.GG's public API. Only champion names, roles and the game mode are sent."),
         ("photo.on.rectangle", "Icons and game data", "From Riot's Data Dragon, plus a few rune icons from CommunityDragon."),
-        ("square.and.pencil", "Changes to your client", "Only Recall's own rune page, when you lock in (if rune import is on) or click Apply. No accounts, no tracking."),
+        ("square.and.pencil", "Changes to your client", "Only Lanewise's own rune page, when you lock in (if rune import is on) or click Apply. No accounts, no tracking."),
     ]
 
     var body: some View {
@@ -374,20 +374,27 @@ struct PrivacySettings: View {
 
 struct ReleaseNotesView: View {
     private let releases: [(String, [String])] = [
+        ("1.1", [
+            "Recall is now called Lanewise. Your settings carry over; you can delete Recall and remove it from Login Items in System Settings",
+            "A new app icon",
+        ]),
         ("1.0", [
-            "Match History: your recent games with builds and stats, filters, and full game details",
-            "Draft: rune page with keystone details; imported automatically when you lock in, or applied with one click",
-            "Draft: common build, spells, skill order, ban suggestions, enemy spells by likely role, duo synergy",
+            "Match History: recent games with builds, stats and full details, and a summary after each game",
+            "Lock in a champion and its runes, item build and summoner spells are set up for you",
+            "Draft: common build, spells, skill order, ban suggestions, enemy spells by likely role, duo synergy (beta)",
             "Players: rank, LP, season and recent win rates, champion stats, mastery, streak and smurf notes, premade detection",
+            "Player Lookup: search any Riot ID for their rank, recent games and champion pool",
             "In game: one HUD tile with live Spell Timers, CS per minute, Gold Diff and Next Item, plus Lanes at the loading screen",
             "Tiles your way: gold and items while Tab is held or always, × to hide until the next game, per-mode positions, text size and opacity",
+            "Queue: optional auto-accept, and a notification when a match is found",
+            "Open at login, with a menu bar icon so Lanewise keeps running after you close its window",
         ]),
     ]
 
     var body: some View {
         Form {
             ForEach(releases, id: \.0) { version, notes in
-                Section("Recall \(version)") {
+                Section("Lanewise \(version)") {
                     ForEach(notes, id: \.self) { Text($0) }
                 }
             }

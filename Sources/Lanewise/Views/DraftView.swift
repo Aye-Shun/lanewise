@@ -160,7 +160,7 @@ private struct RunesSection: View {
             Button("Add and Select") { apply(page) }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Recall creates a page named “Recall: \(DataDragon.shared.champion(champion)?.name ?? "")” and selects it. Later uses replace only that page; your own pages are never changed.")
+            Text("Lanewise creates a page named “Lanewise: \(DataDragon.shared.champion(champion)?.name ?? "")” and selects it. Later uses replace only that page; your own pages are never changed.")
         }
     }
 

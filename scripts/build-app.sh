@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds an optimized Recall.app into ./build (ad-hoc signed).
+# Builds an optimized Lanewise.app into ./build (ad-hoc signed).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -13,13 +13,13 @@ else
     FLAGS=(-c release)
 fi
 swift build "${FLAGS[@]}"
-BINARY="$(swift build "${FLAGS[@]}" --show-bin-path)/Recall"
+BINARY="$(swift build "${FLAGS[@]}" --show-bin-path)/Lanewise"
 
-APP="build/Recall.app"
+APP="build/Lanewise.app"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
-cp "$BINARY" "$APP/Contents/MacOS/Recall"
-strip -x "$APP/Contents/MacOS/Recall"
+cp "$BINARY" "$APP/Contents/MacOS/Lanewise"
+strip -x "$APP/Contents/MacOS/Lanewise"
 cp "$ICON" "$APP/Contents/Resources/AppIcon.icns"
 
 cat > "$APP/Contents/Info.plist" <<'PLIST'
@@ -27,15 +27,15 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>CFBundleName</key><string>Recall</string>
-    <key>CFBundleDisplayName</key><string>Recall</string>
-    <key>CFBundleIdentifier</key><string>local.recall.app</string>
-    <key>CFBundleExecutable</key><string>Recall</string>
+    <key>CFBundleName</key><string>Lanewise</string>
+    <key>CFBundleDisplayName</key><string>Lanewise</string>
+    <key>CFBundleIdentifier</key><string>local.lanewise.app</string>
+    <key>CFBundleExecutable</key><string>Lanewise</string>
     <key>CFBundleIconFile</key><string>AppIcon</string>
     <key>CFBundleIconName</key><string>AppIcon</string>
     <key>CFBundlePackageType</key><string>APPL</string>
-    <key>CFBundleShortVersionString</key><string>1.0</string>
-    <key>CFBundleVersion</key><string>1</string>
+    <key>CFBundleShortVersionString</key><string>1.1</string>
+    <key>CFBundleVersion</key><string>2</string>
     <key>LSMinimumSystemVersion</key><string>14.0</string>
     <key>LSApplicationCategoryType</key><string>public.app-category.games</string>
     <key>NSHighResolutionCapable</key><true/>

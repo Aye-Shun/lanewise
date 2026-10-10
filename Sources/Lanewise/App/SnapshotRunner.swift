@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 /// Renders screens with demo data to PNG files without showing any window, for checking the
-/// UI without a running game: `Recall --snapshot out.png --scene draft`.
+/// UI without a running game: `Lanewise --snapshot out.png --scene draft`.
 ///
 /// Scenes: overview, history, lookup, draft, players, players-inspector, plan, scoreboard, settings,
 /// settings-general, overlays.

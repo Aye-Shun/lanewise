@@ -2,12 +2,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "Recall",
+    name: "Lanewise",
     platforms: [.macOS(.v14)],
     targets: [
         .executableTarget(
-            name: "Recall",
-            path: "Sources/Recall"
+            name: "Lanewise",
+            path: "Sources/Lanewise"
         )
     ]
 )

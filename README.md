@@ -1,33 +1,36 @@
-<p align="center"><img src="docs/icon.png" alt="Recall icon" width="128"></p>
+<p align="center"><img src="docs/icon.png" alt="Lanewise icon" width="128"></p>
 
-# Recall
+# Lanewise
 
 A lightweight, native macOS companion and in-game overlay for League of Legends.
 
-Recall sets up your runes, item build and summoner spells when you lock in, scouts both teams at the
+Lanewise sets up your runes, item build and summoner spells when you lock in, scouts both teams at the
 loading screen, times enemy summoner spells, tracks your CS per minute, gold lead and next item during
 the game, and shows your match history with a summary after every game. It uses the League client
 already running on your Mac plus public build data. No account, no API key, no Overwolf.
+
+Lanewise was called Recall before version 1.1. If you're upgrading, your settings carry over: quit Recall,
+delete it, and remove it from System Settings → General → Login Items.
 
 <p align="center">
   <img src="docs/screenshots/overlay.png" alt="The in-game HUD (left) and the Lanes tile as it appears in game while Tab is held (right)" width="640">
 </p>
 
-- **Native:** Swift and SwiftUI, a ~3 MB app that idles at 0% CPU
+- **Native:** Swift and SwiftUI, a ~3 MB download that idles at 0% CPU
 - **Hands off the game:** only Riot's local APIs (the League client's local API and the official
   Live Client Data API); no code injection, no memory reading, no automation of gameplay
 - **Mac-like:** light and dark appearance, your system accent color, a sidebar, an inspector, ⌘ shortcuts
 
 ## Download
 
-Get `Recall.zip` from the [latest release](https://github.com/Aye-Shun/recall/releases/latest),
-unzip it and drag **Recall** to Applications. It runs on macOS 14 or later, on Apple silicon and Intel.
+Get `Lanewise.zip` from the [latest release](https://github.com/Aye-Shun/lanewise/releases/latest),
+unzip it and drag **Lanewise** to Applications. It runs on macOS 14 or later, on Apple silicon and Intel.
 
-Recall isn't notarized by Apple, so the first time you open it macOS will refuse. Either right-click
-Recall → **Open** → **Open**, or run:
+Lanewise isn't notarized by Apple, so the first time you open it macOS will refuse. Either right-click
+Lanewise → **Open** → **Open**, or run:
 
 ```bash
-xattr -dr com.apple.quarantine /Applications/Recall.app
+xattr -dr com.apple.quarantine /Applications/Lanewise.app
 ```
 
 Or [build it yourself](#build-from-source).
@@ -36,10 +39,10 @@ Or [build it yourself](#build-from-source).
 
 ### Champ select
 
-When you lock in a champion, Recall sets up the common loadout for that champion and role:
+When you lock in a champion, Lanewise sets up the common loadout for that champion and role:
 
-- **Runes:** creates or replaces its own "Recall: *champion*" rune page and selects it
-- **Item build:** adds a "Recall: *champion*" item set to the in-game shop (starter, core, boots and
+- **Runes:** creates or replaces its own "Lanewise: *champion*" rune page and selects it
+- **Item build:** adds a "Lanewise: *champion*" item set to the in-game shop (starter, core, boots and
   options for items 4 to 6)
 - **Summoner spells:** sets the two common spells, keeping Flash on the key you choose (D or F)
 
@@ -52,7 +55,7 @@ you also get ban suggestions and each enemy's likely role and spells.
 
 ### Queue
 
-Optionally accept matches for you (Recall waits 2 seconds so you can still decline, and never accepts
+Optionally accept matches for you (Lanewise waits 2 seconds so you can still decline, and never accepts
 after you've answered), and get a Mac notification when a match is found while you're in another app.
 
 ### In-game HUD
@@ -97,11 +100,11 @@ like, as a notification.
 | ![Scoreboard](docs/screenshots/scoreboard.png) | **Scoreboard.** Kills, item gold and every player's items, with each lane's gold difference. |
 | ![Settings](docs/screenshots/settings.png) | **Settings.** Open at login, what to import when you lock in, auto-accept, notifications, the HUD's sections and look. |
 
-Screenshots use Recall's sample players with live build data from OP.GG.
+Screenshots use Lanewise's sample players with live build data from OP.GG.
 
-## Using Recall
+## Using Lanewise
 
-Recall opens at login and lives in the menu bar (binoculars icon), so the overlay is ready when you
+Lanewise opens at login and lives in the menu bar (binoculars icon), so the overlay is ready when you
 play; closing its window doesn't stop it. Use **Preview** in the toolbar to try every screen and the
 overlay without a game.
 
@@ -129,7 +132,7 @@ overlay without a game.
 | [Data Dragon](https://developer.riotgames.com/docs/lol#data-dragon) | Champion, item, rune and summoner spell data and icons. |
 | [CommunityDragon](https://communitydragon.org) | Icons for rune stat shards, which Data Dragon doesn't include. |
 
-**What Recall changes in the client**, each only when its setting is on: its own "Recall: *champion*"
+**What Lanewise changes in the client**, each only when its setting is on: its own "Lanewise: *champion*"
 rune page and item set, and your summoner spells, when you lock in (or the rune page when you click
 *Apply to Client*); and accepting a match when auto-accept is on. It never sends your client
 credentials anywhere, and there are no accounts or analytics.
@@ -143,21 +146,21 @@ during games; overlay windows are released after each game; and build data is ca
 Requirements: macOS 14 or later and Xcode 15.3 or later (Swift 5.10+).
 
 ```bash
-git clone https://github.com/Aye-Shun/recall.git
-cd recall
+git clone https://github.com/Aye-Shun/lanewise.git
+cd lanewise
 ./scripts/build-app.sh                 # this Mac's architecture
 UNIVERSAL=1 ./scripts/build-app.sh     # Apple silicon and Intel
-open build/Recall.app
+open build/Lanewise.app
 ```
 
-`build-app.sh` makes an optimized, ad-hoc signed `build/Recall.app`. Move it to `/Applications` so
+`build-app.sh` makes an optimized, ad-hoc signed `build/Lanewise.app`. Move it to `/Applications` so
 "open at login" keeps pointing at it.
 
 ## Development
 
 ```bash
-swift run Recall --demo                                # launch straight into preview data
-swift run Recall --snapshot /tmp/draft.png --scene draft --appearance light
+swift run Lanewise --demo                                # launch straight into preview data
+swift run Lanewise --snapshot /tmp/draft.png --scene draft --appearance light
 ```
 
 Snapshot scenes: `overview`, `history`, `lookup`, `draft`, `players`, `players-inspector`, `plan`,
@@ -166,7 +169,7 @@ windows. Diagnostic scenes `window-sizing`, `tab-stress` and `timer-test` print 
 sizing and the spell timers.
 
 ```
-Sources/Recall/
+Sources/Lanewise/
   App/          entry point, menu bar, settings model, snapshot renderer
   LCU/          League client discovery, REST client, models, rune page, item set and spell writers
   LiveClient/   in-game Live Client Data API
@@ -187,10 +190,10 @@ Sources/Recall/
 
 ## Disclaimer
 
-Recall isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or
+Lanewise isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or
 anyone officially involved in producing or managing Riot Games properties. Riot Games, and all
 associated properties are trademarks or registered trademarks of Riot Games, Inc.
 
-Recall is not affiliated with OP.GG or CommunityDragon. The League client's local API isn't
-officially supported by Riot for third-party apps, so use Recall at your own risk and check Riot's
+Lanewise is not affiliated with OP.GG or CommunityDragon. The League client's local API isn't
+officially supported by Riot for third-party apps, so use Lanewise at your own risk and check Riot's
 current policies.

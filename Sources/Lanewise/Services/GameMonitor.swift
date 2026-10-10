@@ -403,7 +403,7 @@ final class GameMonitor {
             readyCheckPendingSince = nil
             readyCheckAccepted = false
             if AppSettings.shared.notifyMatchFound && !GameWindow.isFrontmost {
-                Notifier.post(title: "Match found", body: AppSettings.shared.autoAccept ? "Recall is accepting it for you." : "Accept it in League.", sound: true)
+                Notifier.post(title: "Match found", body: AppSettings.shared.autoAccept ? "Lanewise is accepting it for you." : "Accept it in League.", sound: true)
             }
         }
         phase = newPhase
@@ -508,7 +508,7 @@ final class GameMonitor {
         if settings.importItemSets, let summonerId = me?.summonerId {
             do {
                 try await ItemSetWriter(client: client).apply(meta, champion: info, position: position, mode: mode,
-                                                              summonerId: summonerId, accountId: me?.accountId)
+                                                              summonerId: summonerId)
                 parts.append("item build")
             } catch {
                 problems.append("Items: \(error.localizedDescription)")

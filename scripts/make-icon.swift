@@ -1,4 +1,4 @@
-// Draws the Recall icon and writes Resources/AppIcon.icns and docs/icon.png. Run from the repo root: swift scripts/make-icon.swift
+// Draws the Lanewise icon and writes Resources/AppIcon.icns and docs/icon.png. Run: swift scripts/make-icon.swift
 import SwiftUI
 import AppKit
 

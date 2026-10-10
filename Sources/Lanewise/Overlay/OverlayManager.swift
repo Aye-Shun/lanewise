@@ -40,7 +40,7 @@ final class OverlayManager {
     /// Diagnostics only: stands in for the Tab key (previews otherwise always show everything).
     @ObservationIgnored var debugTabOverride: Bool?
 
-    /// Key polling only runs during a game; outside games Recall does no periodic overlay work
+    /// Key polling only runs during a game; outside games Lanewise does no periodic overlay work
     /// and the windows are released.
     func handlePhase(_ phase: GamePhase) {
         if phase.isInGame {
@@ -278,7 +278,7 @@ final class OverlayWindow: NSPanel {
 
     func useLayout(kind: OverlayWindowKind, layout: String) {
         // "v2": the HUD moved to the left side, so earlier saved spots shouldn't carry over.
-        let name = "Recall.overlay.v2.\(kind.rawValue).\(layout)"
+        let name = "Lanewise.overlay.v2.\(kind.rawValue).\(layout)"
         setFrameAutosaveName("")
         if !setFrameUsingName(name) { placeAtDefault(kind: kind) }
         setFrameAutosaveName(name)
@@ -341,7 +341,7 @@ enum KeyState {
 }
 
 enum GameWindow {
-    /// True when League (or Recall itself) is the frontmost app, so panels don't float over
+    /// True when League (or Lanewise itself) is the frontmost app, so panels don't float over
     /// other apps when the player alt-tabs out of a game.
     @MainActor
     static var isFrontmost: Bool {

@@ -1,7 +1,7 @@
 import Foundation
 
-/// Writes one app-owned rune page ("Recall: <champion>") and selects it. This is the only
-/// write Recall makes to the client, and it only runs after the user confirms it.
+/// Writes one app-owned rune page ("Lanewise: <champion>") and selects it. This is the only
+/// write Lanewise makes to the client, and it only runs after the user confirms it.
 struct RunePageWriter {
     enum WriteError: LocalizedError {
         case incompletePage
@@ -15,7 +15,9 @@ struct RunePageWriter {
         }
     }
 
-    static let namePrefix = "Recall: "
+    static let namePrefix = "Lanewise: "
+    /// The prefix before the rename: the saved page id can still point at a page named with it.
+    private static let legacyNamePrefix = "Recall: "
     private static let pageIDKey = "runePageID"
 
     let client: LCUClient
@@ -25,11 +27,11 @@ struct RunePageWriter {
             throw WriteError.incompletePage
         }
 
-        // Replace only the page Recall created last time (matched by id, not just by name), so
-        // a page the player happened to name "Recall: …" is never touched.
+        // Replace only the page Lanewise created last time (matched by id, not just by name), so
+        // a page the player happened to name "Lanewise: …" is never touched.
         let pages = (try? await client.get("/lol-perks/v1/pages", as: [LCUPerkPage].self)) ?? []
         let ownID = UserDefaults.standard.object(forKey: Self.pageIDKey) as? Int
-        if let ownID, let existing = pages.first(where: { $0.id == ownID && $0.name?.hasPrefix(Self.namePrefix) == true && $0.isDeletable != false }) {
+        if let ownID, let existing = pages.first(where: { $0.id == ownID && Self.isOwnName($0.name) && $0.isDeletable != false }) {
             try await client.send("DELETE", "/lol-perks/v1/pages/\(existing.id)")
         } else if let inventory = try? await client.get("/lol-perks/v1/inventory", as: LCUPerkInventory.self),
                   inventory.canAddCustomPage == false {
@@ -37,7 +39,7 @@ struct RunePageWriter {
         }
 
         let body: [String: Any] = [
-            "name": Self.namePrefix + championName,
+            "name": String((Self.namePrefix + championName).prefix(25)), // the client's name limit
             "primaryStyleId": primary,
             "subStyleId": secondary,
             "selectedPerkIds": page.allPerkIDs,
@@ -47,5 +49,10 @@ struct RunePageWriter {
         if let page = try? JSONDecoder().decode(LCUPerkPage.self, from: created) {
             UserDefaults.standard.set(page.id, forKey: Self.pageIDKey)
         }
+    }
+
+    private static func isOwnName(_ name: String?) -> Bool {
+        guard let name else { return false }
+        return name.hasPrefix(namePrefix) || name.hasPrefix(legacyNamePrefix)
     }
 }

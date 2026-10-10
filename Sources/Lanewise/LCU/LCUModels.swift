@@ -1,6 +1,6 @@
 import Foundation
 
-// Decoding models for the LCU endpoints Recall uses. Every field is optional:
+// Decoding models for the LCU endpoints Lanewise uses. Every field is optional:
 // the LCU is undocumented and Riot changes payloads between patches, so a missing
 // field should degrade a stat, not fail the whole response.
 
@@ -159,7 +159,7 @@ struct LCUChampSelectPlayer: Decodable {
     var assignedPosition: String?
     var gameName: String?
     var tagLine: String?
-    /// "HIDDEN" in ranked queues. Recall respects this and does not look the player up.
+    /// "HIDDEN" in ranked queues. Lanewise respects this and does not look the player up.
     var nameVisibilityType: String?
 }
 
