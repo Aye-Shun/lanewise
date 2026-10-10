@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/icon.png" alt="Recall icon" width="128"></p>
+
 # Recall
 
 A lightweight, native macOS companion and in-game overlay for League of Legends.
@@ -11,7 +13,7 @@ already running on your Mac plus public build data. No account, no API key, no O
   <img src="docs/screenshots/overlay.png" alt="The in-game HUD (left) and the Lanes tile as it appears in game while Tab is held (right)" width="640">
 </p>
 
-- **Native:** Swift and SwiftUI, a ~2 MB app that idles at 0% CPU
+- **Native:** Swift and SwiftUI, a ~3 MB app that idles at 0% CPU
 - **Hands off the game:** only Riot's local APIs (the League client's local API and the official
   Live Client Data API); no code injection, no memory reading, no automation of gameplay
 - **Mac-like:** light and dark appearance, your system accent color, a sidebar, an inspector, ⌘ shortcuts
